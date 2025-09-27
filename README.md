@@ -34,8 +34,8 @@ The goal is to simulate real-world data engineering tasks using C#, EF Core, LIN
 ## 🚀 How to Run the Project
 *Clone the repository*
    ```bash
-   git clone https://github.com/YoussefHamedddd/End-to-End-ELT-Pipeline-for-a-Simulated-Company-System-using-C-EF-Core-LINQ-and-SQL-Server.git
-   cd End-to-End-ELT-Pipeline-for-a-Simulated-Company-System-using-C-EF-Core-LINQ-and-SQL-Server
+   git clone https://github.com/YoussefHamedddd/ELT-pipeline-project-using-CSharp-EF-Core-LINQ-and-SQL-Server..git
+   
 
 2. Setup SQL Server
 
