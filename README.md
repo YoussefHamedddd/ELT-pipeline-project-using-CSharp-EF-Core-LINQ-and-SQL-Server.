@@ -13,7 +13,7 @@ The goal is to simulate real-world data engineering tasks using C#, EF Core, LIN
 ---
 
 ## 🛠 Technologies Used
-- *C# (.NET 6 / .NET Core)*  
+- *C# (.NET 8 / .NET Core)*  
 - *Entity Framework Core (Code-First, Migrations)*  
 - *LINQ* for data transformations  
 - *SQL Server* for storage and advanced transformations  
