@@ -1,0 +1,154 @@
+﻿USE Company_ELT;
+
+-- Preview all records in the Projects table
+SELECT * FROM Projects;
+
+-- Preview all records in the Departments table
+SELECT * FROM Departments;
+
+-- Preview all records in the DepartmentLocations table
+SELECT * FROM DepartmentLocations;
+
+-- Preview all records in the Dependents table
+SELECT * FROM Dependents;
+
+-- Preview all records in the Employees table
+SELECT * FROM Employees;
+
+-- Preview all records in the EmployeeProjects table
+SELECT * FROM EmployeeProjects;
+
+
+
+
+-- Business Check:
+-- Select dependents whose names contain numbers (invalid case),
+-- or dependents that appear duplicated (same Name + ESSN).
+SELECT D.Name, D.ESSN
+FROM Dependents D
+WHERE D.Name LIKE '%[0-9]%'
+   OR D.Name IN (
+        SELECT Name
+        FROM Dependents
+        GROUP BY Name, ESSN
+        HAVING COUNT(*) > 1
+   );
+
+-- Business Cleanup:
+-- Delete dependents with invalid names (containing numbers),
+-- or duplicate records (same Name + ESSN).
+DELETE FROM Dependents
+WHERE Name LIKE '%[0-9]%'
+   OR Name IN (
+        SELECT Name
+        FROM Dependents
+        GROUP BY Name, ESSN
+        HAVING COUNT(*) > 1
+   );
+
+
+
+-- Business Check:
+-- Select all dependents with invalid gender values (not 'M' or 'F').
+SELECT * 
+FROM Dependents
+WHERE Gender NOT IN ('M', 'F');
+
+-- Business Cleanup:
+-- Update all invalid genders to 'Unknown' 
+-- to maintain data consistency.
+UPDATE Dependents
+SET Gender = 'Unknown'
+WHERE Gender NOT IN ('M', 'F');
+
+
+
+
+-- Business Cleanup:
+-- Ensure all birth dates are realistic (between 1970–2025).
+-- Any invalid birth dates in Dependents are set to NULL.
+UPDATE Dependents
+SET BirthDate = NULL
+WHERE BirthDate IS NOT NULL
+  AND BirthDate NOT BETWEEN '1970-01-01' AND '2025-12-31';
+
+-- Apply the same birth date rule to Employees table.
+UPDATE Employees
+SET BirthDate = NULL
+WHERE BirthDate IS NOT NULL
+  AND BirthDate NOT BETWEEN '1970-01-01' AND '2025-12-31';
+
+
+
+
+-- Business Check:
+-- Select invalid birth date records in Dependents 
+-- (values that are not real dates but stored as text).
+SELECT BirthDate
+FROM Dependents 
+WHERE BirthDate IS NOT NULL 
+  AND ISDATE(BirthDate) = 0;
+
+-- Business Requirement:
+-- Change the data type of BirthDate in Dependents to DATE for consistency.
+ALTER TABLE Dependents
+ALTER COLUMN BirthDate DATE;
+
+-- Apply the same rule to Employees.
+ALTER TABLE Employees
+ALTER COLUMN BirthDate DATE;
+
+-- Apply the same rule to Departments.
+ALTER TABLE Departments
+ALTER COLUMN Hiring_Date DATE;
+
+
+
+
+-- Business Cleanup:
+-- Update invalid gender values in Employees to 'Unknown'.
+UPDATE Employees
+SET Gender = 'Unknown'
+WHERE Gender NOT IN ('M', 'F');
+
+
+
+
+-- Business Requirement:
+-- Clean EmployeeProjects data:
+-- 1. Delete records where NumOfHours < 0 (invalid).
+-- 2. Delete records where NumOfHours > 500 (outliers).
+DELETE FROM EmployeeProjects 
+WHERE (NumOfHours < 0 OR NumOfHours > 500);
+
+
+
+
+-- Business Need:
+-- Replace NULL values in NumOfHours with the average number of hours
+-- calculated from existing valid records in EmployeeProjects.
+UPDATE ep
+SET ep.NumOfHours = avg_data.AvgHours
+FROM EmployeeProjects ep
+CROSS JOIN (
+    SELECT CAST(AVG(CAST(NumOfHours AS DECIMAL(10,2))) AS DECIMAL(10,2)) AS AvgHours
+    FROM EmployeeProjects
+    WHERE NumOfHours IS NOT NULL
+) avg_data
+WHERE ep.NumOfHours IS NULL;
+
+
+
+
+-- Business Requirement:
+-- Normalize City field in Projects:
+-- 1. Convert blank/whitespace-only values into NULL.
+UPDATE Projects
+SET City = NULL
+WHERE LTRIM(RTRIM(City)) = '';
+
+-- 2. Replace all NULL City values with 'Unknown'
+--    so every project has a defined city.
+UPDATE Projects
+SET City = 'Unknown'
+WHERE City IS NULL;;
